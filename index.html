@@ -29,6 +29,75 @@
         <button onclick="generatePick3Pro()">RUN PRO ANALYSIS</button>
 
         <div id="resultsArea" class="results-container" style="display:none;">
-            <div class="prediction-row"><span class="label">Pick 1 (Hot Weighted)</span> <span id="r0" class="pick-values"></span><span id="s0" class="stats"></span></div>
-            <div class="prediction-row"><span class="label">Pick 2 (Hot Weighted)</span> <span id="r1" class="pick-values"></span><span id="s1" class="stats"></span></div>
-            <div class="prediction-row"><span class="label">Pick 3 (Balanced)</span> <span id="r2" class="pick-values"></span><span id="s2
+            <div class="prediction-row"><span class="label">Pick 1 (Hot)</span> <span id="r0" class="pick-values"></span><span id="s0" class="stats"></span></div>
+            <div class="prediction-row"><span class="label">Pick 2 (Hot)</span> <span id="r1" class="pick-values"></span><span id="s1" class="stats"></span></div>
+            <div class="prediction-row"><span class="label">Pick 3 (Balanced)</span> <span id="r2" class="pick-values"></span><span id="s2" class="stats"></span></div>
+            <div class="prediction-row"><span class="label">Pick 4 (Overdue)</span> <span id="r3" class="pick-values"></span><span id="s3" class="stats"></span></div>
+            <div class="prediction-row"><span class="label">Pick 5 (Overdue)</span> <span id="r4" class="pick-values"></span><span id="s4" class="stats"></span></div>
+        </div>
+    </div>
+
+    <script>
+        // LOAD SAVED DATA
+        window.onload = function() {
+            const savedHistory = localStorage.getItem('pick3_storage_v1');
+            if (savedHistory) { document.getElementById('history').value = savedHistory; }
+        };
+
+        function checkFilters(line) {
+            let nums = line.map(Number);
+            let sum = nums.reduce((a, b) => a + b, 0);
+            // Relaxed sum for Pick 3 to ensure the button always works
+            if (sum < 7 || sum > 22) return false;
+            let odds = nums.filter(n => n % 2 !== 0).length;
+            if (odds === 0 || odds === 3) return false;
+            return {sum, odds, evens: 3-odds};
+        }
+
+        function generatePick3Pro() {
+            const historyBox = document.getElementById('history');
+            const historyText = historyBox.value;
+            
+            // SAVE DATA
+            localStorage.setItem('pick3_storage_v1', historyText);
+
+            const digits = historyText.replace(/[^0-9]/g, '').split('');
+            if (digits.length < 3) { alert("Please paste numbers first!"); return; }
+
+            let counts = {};
+            for (let i = 0; i < 10; i++) counts[i] = 0;
+            digits.forEach(d => counts[d]++);
+            let sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+            document.getElementById('resultsArea').style.display = 'block';
+
+            for (let i = 0; i < 5; i++) {
+                let validLine = false;
+                let finalLine = [];
+                let stats = {};
+                let attempts = 0;
+
+                while (!validLine && attempts < 500) {
+                    let pick = [];
+                    // Hot, Balanced, or Overdue pools
+                    let pool = (i < 2) ? sorted.slice(0, 5) : (i === 2) ? ["0","1","2","3","4","5","6","7","8","9"] : sorted.slice(-5);
+                    
+                    for(let j=0; j<3; j++) {
+                        pick.push(pool[Math.floor(Math.random() * pool.length)]);
+                    }
+                    
+                    stats = checkFilters(pick);
+                    if (stats) { finalLine = pick; validLine = true; }
+                    attempts++;
+                }
+                
+                // Fallback if filters are too strict
+                if (!validLine) { finalLine = [sorted[0], sorted[1], sorted[2]]; stats = {sum: "N/A", odds: "Mix"}; }
+
+                document.getElementById('r' + i).innerText = finalLine.join('');
+                document.getElementById('s' + i).innerText = `Sum: ${stats.sum} | O/E: ${stats.odds || '?'}:${stats.evens || '?'}`;
+            }
+        }
+    </script>
+</body>
+</html>
