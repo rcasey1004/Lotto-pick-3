@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ Pick 3 AI Predictor</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #1a1a1a; color: white; padding: 20px; }
+        .card { background: #2d2d2d; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 { color: #ffcc00; }
+        textarea { width: 90%; height: 100px; margin: 10px 0; border-radius: 5px; padding: 10px; }
+        button { background: #ffcc00; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #e6b800; transform: scale(1.05); }
+        #result { margin-top: 25px; font-size: 40px; font-weight: bold; color: #00ffcc; letter-spacing: 10px; }
+        .small-text { font-size: 12px; color: #aaa; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>AZ Pick 3 AI</h1>
+        <p>Paste last 10-100 draws (separated by spaces or commas):</p>
+        <textarea id="history" placeholder="Example: 123, 456, 789..."></textarea>
+        
+        <br><br>
+        <button onclick="generatePrediction()">GENERATE PREDICTION</button>
+
+        <div id="result">---</div>
+        <p class="small-text">Algorithm: Hot/Cold Weighted Frequency Analysis</p>
+    </div>
+
+    <script>
+        function generatePrediction() {
+            const historyText = document.getElementById('history').value;
+            const numbers = historyText.replace(/[^0-9]/g, '').split('');
+            
+            if (numbers.length < 3) {
+                alert("Please paste some previous winning numbers first!");
+                return;
+            }
+
+            // Count frequency of each number 0-9
+            let counts = {};
+            for (let i = 0; i < 10; i++) counts[i] = 0;
+            numbers.forEach(n => counts[n]++);
+
+            // Sort numbers by frequency (Hot to Cold)
+            let sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+            // Prediction Logic: Mix of "Hot" numbers and "Due" numbers
+            let p1 = sorted[0]; // Hottest
+            let p2 = sorted[1]; // Second Hottest
+            let p3 = sorted[sorted.length - 1]; // Coldest (Due to hit)
+
+            // Randomly shuffle the prediction so it's not always in order
+            let finalPick = [p1, p2, p3].sort(() => Math.random() - 0.5);
+
+            document.getElementById('result').innerText = finalPick.join('');
+        }
+    </script>
+</body>
+</html>
