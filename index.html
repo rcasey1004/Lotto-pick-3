@@ -1,84 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZ Pick 3 AI Predictor</title>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
-        .card { background: #1e1e1e; padding: 25px; border-radius: 20px; border: 2px solid #ffcc00; max-width: 400px; margin: auto; }
-        h1 { color: #ffcc00; margin-bottom: 5px; }
-        textarea { width: 90%; height: 80px; background: #333; color: white; border: 1px solid #555; border-radius: 10px; padding: 10px; margin-top: 10px; }
-        button { background: #ffcc00; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 20px; width: 100%; }
-        button:active { transform: scale(0.98); }
-        .results-container { margin-top: 25px; text-align: left; background: #2a2a2a; border-radius: 10px; padding: 15px; }
-        .prediction-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #444; font-size: 22px; font-weight: bold; }
-        .prediction-row:last-child { border-bottom: none; }
-        .num-label { color: #ffcc00; font-size: 14px; }
-        .pick-value { color: #00ffcc; letter-spacing: 5px; }
-    </style>
-</head>
-<body>
-
-    <div class="card">
-        <h1>AZ Pick 3 AI</h1>
-        <p style="font-size: 14px;">Input history to weigh the AI:</p>
-        <textarea id="history" placeholder="Paste winning numbers here..."></textarea>
-        
-        <button onclick="generateFivePredictions()">GENERATE 5 TOP PICKS</button>
-
-        <div id="resultsArea" class="results-container" style="display:none;">
-            <div class="prediction-row"><span class="num-label">PICK 1</span> <span id="r0" class="pick-value"></span></div>
-            <div class="prediction-row"><span class="num-label">PICK 2</span> <span id="r1" class="pick-value"></span></div>
-            <div class="prediction-row"><span class="num-label">PICK 3</span> <span id="r2" class="pick-value"></span></div>
-            <div class="prediction-row"><span class="num-label">PICK 4</span> <span id="r3" class="pick-value"></span></div>
-            <div class="prediction-row"><span class="num-label">PICK 5</span> <span id="r4" class="pick-value"></span></div>
-        </div>
-    </div>
-
-    <script>
-        function generateFivePredictions() {
-            const historyText = document.getElementById('history').value;
-            const numbers = historyText.replace(/[^0-9]/g, '').split('');
-            
-            if (numbers.length < 3) {
-                alert("Please paste some history first!");
-                return;
-            }
-
-            // Frequency Analysis
-            let counts = {};
-            for (let i = 0; i < 10; i++) counts[i] = 0;
-            numbers.forEach(n => counts[n]++);
-
-            // Sort: Hot (most frequent) to Cold (least frequent)
-            let sortedByFreq = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
-
-            const resultsArea = document.getElementById('resultsArea');
-            resultsArea.style.display = 'block';
-
-            // Generate 5 variations
-            for (let i = 0; i < 5; i++) {
-                let pick = [];
-                
-                // Variation logic:
-                // Pick 1 & 2: Hot heavy
-                // Pick 3: Mix
-                // Pick 4 & 5: Due (Cold) heavy
-                if (i < 2) {
-                    pick = [sortedByFreq[0], sortedByFreq[1], sortedByFreq[Math.floor(Math.random() * 3)]];
-                } else if (i === 2) {
-                    pick = [sortedByFreq[0], sortedByFreq[4], sortedByFreq[9]];
-                } else {
-                    pick = [sortedByFreq[9], sortedByFreq[8], sortedByFreq[Math.floor(Math.random() * 10)]];
-                }
-
-                // Shuffle the order so they aren't always sorted
-                pick.sort(() => Math.random() - 0.5);
-                document.getElementById('r' + i).innerText = pick.join('');
-            }
+<script>
+    // LOAD SAVED DATA WHEN APP OPENS
+    window.onload = function() {
+        const savedHistory = localStorage.getItem('pick3_data');
+        if (savedHistory) {
+            document.getElementById('history').value = savedHistory;
         }
-    </script>
-</body>
-</html>
+    };
+
+    function generateFivePredictions() {
+        const historyBox = document.getElementById('history');
+        const historyText = historyBox.value;
+        
+        // SAVE TO PHONE MEMORY
+        localStorage.setItem('pick3_data', historyText);
+
+        const numbers = historyText.replace(/[^0-9]/g, '').split('');
+        if (numbers.length < 3) {
+            alert("Please paste some history first!");
+            return;
+        }
+
+        let counts = {};
+        for (let i = 0; i < 10; i++) counts[i] = 0;
+        numbers.forEach(n => counts[n]++);
+        let sortedByFreq = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+        document.getElementById('resultsArea').style.display = 'block';
+        for (let i = 0; i < 5; i++) {
+            let pick = (i < 2) ? [sortedByFreq[0], sortedByFreq[1], sortedByFreq[Math.floor(Math.random() * 3)]] :
+                       (i === 2) ? [sortedByFreq[0], sortedByFreq[4], sortedByFreq[9]] :
+                       [sortedByFreq[9], sortedByFreq[8], sortedByFreq[Math.floor(Math.random() * 10)]];
+            pick.sort(() => Math.random() - 0.5);
+            document.getElementById('r' + i).innerText = pick.join('');
+        }
+    }
+</script>
