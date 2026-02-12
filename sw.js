@@ -1,9 +1,4 @@
-// Simple Service Worker to allow installation
-self.addEventListener('install', (event) => {
-    console.log('Service Worker: Installed');
-});
-
-self.addEventListener('fetch', (event) => {
-    // This allows the app to load content
-    event.respondWith(fetch(event.request));
+self.addEventListener('fetch', function(event) {
+  // This is the "brain" that makes Chrome see this as a real App.
+  event.respondWith(fetch(event.request));
 });
